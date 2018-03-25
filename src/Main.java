@@ -1,10 +1,13 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main 
 {
-	public static void main(String[] args) 
+	public static void main(String[] args) throws IOException 
 	{
 		String instructions = ""
 				+ "Welcome to Uber Console Version! Please enter an integer to select from the following options \n"
@@ -39,14 +42,54 @@ public class Main
 				e.printStackTrace();
 			}
 			
-			int c = Integer.parseInt(input);
+			int c = 0;
+			try {
+				c = Integer.parseInt(input);
+			} catch (NumberFormatException e) {
+				System.out.println("You did not enter a number correctly");
+			}
+			
 				
+			// CASE 1: REGISTER A NEW USER
 			if (c == 1)
 			{
+				System.out.println("You are now registering a new user");
 				
+				System.out.println("Please enter your login-name: ");
+				String name = in.readLine();
+				System.out.println("Please enter your password: ");
+				String password = in.readLine();
+				System.out.println("Please enter your user type (\"UU\" for uber user, \"UD for uber driver\": ");
+				String userType = in.readLine();
+				
+				String result = Register(name, password, userType);
+				System.out.println(result);
 			}
+			
+			// CASE 2: Reserve times for a car
 			else if (c == 2)
 			{
+				System.out.println("Please enter your login name: ");
+				String login = in.readLine();
+				System.out.println("Please enter your password");
+				String password = in.readLine();
+				System.out.println("Please enter the number of reservations you'd like to make");
+				Integer numReservations = Integer.parseInt(in.readLine());
+				System.out.println("Please enter your times one line at a time in the following format (hh:mm:ss)");
+				List<String> Dates = new ArrayList<String>();
+				for(int i = 0; i < numReservations; i++)
+				{
+					Dates.add(in.readLine());
+				}
+				System.out.println("Confirm that the following times are correct (y/n)");
+				for (String s: Dates)
+				{
+					System.out.println(s);
+				}
+				if ("y".equals(in.readLine()))
+				{
+					System.out.println(Reserve(login, password, Dates));
+				}
 				
 			}
 			else if (c == 3)
@@ -102,6 +145,9 @@ public class Main
 				System.out.print("Goodbye \n");
 				keepReading = false;
 			}
+			
+			System.out.println("Press any enter to continue...");
+			in.readLine();
 		}
 	}
 	
@@ -109,21 +155,113 @@ public class Main
 	 * Registration: a new user (either UD or UU) has to provide the appropriate information;
 	 * he/she can pick a login-name and a password.  The login name should be checked for uniqueness.
 	 * */
-	public String Register(String name, String password, String userType)
+	public static String Register(String loginName, String password, String userType)
 	{
+		// create a new connection with the database
+		Connector connection;
+		try {
+			connection = new Connector();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
 		
+		// select the 5530db26 from the server
+		try {
+			connection.con.createStatement().executeQuery("use 5530db26");
+		} catch (SQLException e) {
+			return e.getMessage();
+		}
+		
+		// construct a query
+		String Query = "";
+		if (userType.equals("UU"))
+		{
+			Query = String.format("INSERT INTO UU VALUES ('%s', 'noName', 'noAddress', 5555555, '%s')", loginName, password);
+		}
+		else if (userType.equals("UD"))
+		{
+			Query = String.format("INSERT INTO UD VALUES ('%s', 'noName', 'noAddress', 5555555, '0', '%s', 'noUDCol')", loginName, password);
+		}
+		
+		System.out.println(Query);
+				
+		// execute the query
+		try {
+			connection.con.createStatement().execute(Query);
+		} catch (SQLException e) {
+			return e.getMessage();
+		}
+		
+		
+		// close the connection
+		try {
+			connection.closeConnection();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			return e.getMessage();
+		}
+		
+		// return a success message for the User
 		return "Success";
 	}
 	
 	/*
-	 * Reserve:After registration, a user can record a reservation to any UC 
+	 * Reserve: After registration, a user can record a reservation to any UC 
 	 * (the same user may reserve the same UC multiple times).  Each user session 
-	 * (meaning each time after a user has logged into the system)may add one or more reservations,  
+	 * (meaning each time after a user has logged into the system) may add one or more reservations,  
 	 * and all reservations added by a user in a user session are reported to 
 	 * him/her for the final review and confirmation, before they are added into the database.
 	 */
-	public String Reserve()
+	public static String Reserve(String login, String password, List<String> Times)
 	{
+		// create a new connection with the database
+		Connector connection;
+		try {
+			connection = new Connector();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		
+		// select the 5530db26 from the server
+		try {
+			connection.con.createStatement().executeQuery("use 5530db26");
+		} catch (SQLException e) {
+			return e.getMessage();
+		}
+		
+		for(String s : Times)
+		{
+			String time = s.substring(0, 2);
+			String Query = String.format("select vin, pid from UC inner join "
+					+ "(select login, pid from Available where pid in "
+					+ "(select pid from Period where %s < Period.to and %s > Period.from)) a on UC.login = a.login;", time, time);
+			
+			System.out.println(Query);
+			
+			ResultSet results;
+			
+			// execute the query
+			try {
+				results = connection.con.createStatement().executeQuery(Query);
+			} catch (SQLException e) {
+				return e.getMessage();
+			}
+			
+		}
+		
+		
+		
+		
+		
+		// close the connection
+		try {
+			connection.closeConnection();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			return e.getMessage();
+		}
+		
+		// return a success message for the user
 		return "Success";
 	}
 	
