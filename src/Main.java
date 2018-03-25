@@ -6,7 +6,8 @@ public class Main
 {
 	public static void main(String[] args) 
 	{
-		String instructions = "Welcome to Uber Console Version! Please enter an integer to select from the following options \n"
+		String instructions = ""
+				+ "Welcome to Uber Console Version! Please enter an integer to select from the following options \n"
 				+ "1. Register a new user \n"
 				+ "2. Reserve a car \n"
 				+ "3. Create a new car \n"
@@ -25,9 +26,10 @@ public class Main
 		
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 		
-		while (true)
+		Boolean keepReading = true;
+		
+		while (keepReading)
 		{
-			
 			System.out.print(instructions);
 			
 			String input = "";
@@ -36,71 +38,71 @@ public class Main
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-						
-			if (input == "1")
+			
+			int c = Integer.parseInt(input);
+				
+			if (c == 1)
 			{
 				
 			}
-			if (input == "2")
+			else if (c == 2)
 			{
 				
 			}
-			if (input == "3")
+			else if (c == 3)
 			{
 				
 			}
-			if (input == "4")
+			else if (c == 4)
 			{
 				
 			}
-			if (input == "5")
+			else if (c == 5)
 			{
 				
 			}
-			if (input == "6")
+			else if (c == 6)
 			{
 				
 			}
-			if (input == "7")
+			else if (c == 7)
 			{
 				
 			}
-			if (input == "8")
+			else if (c == 8)
 			{
 				
 			}
-			if (input == "9")
+			else if (c == 9)
 			{
 				
 			}
-			if (input == "10")
+			else if (c == 10)
 			{
 				
 			}
-			if (input == "11")
+			else if (c == 11)
 			{
 				
 			}
-			if (input == "12")
+			else if (c == 12)
 			{
 				
 			}
-			if (input == "13")
+			else if (c == 13)
 			{
 				
 			}
-			if (input == "14")
+			else if (c == 14)
 			{
 				
 			}
-			if (input == "15")
+			else if (c == 15)
 			{
 				System.out.print("Goodbye \n");
-				break;
+				keepReading = false;
 			}
-			
 		}
-
 	}
 	
 	/* 
