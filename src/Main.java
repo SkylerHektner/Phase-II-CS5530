@@ -1,10 +1,105 @@
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
 public class Main 
 {
 	public static void main(String[] args) 
 	{
+		String instructions = "Welcome to Uber Console Version! Please enter an integer to select from the following options \n"
+				+ "1. Register a new user \n"
+				+ "2. Reserve a car \n"
+				+ "3. Create a new car \n"
+				+ "4. Record a ride \n"
+				+ "5. Record a favorite driver/car \n"
+				+ "6. Record Feedback for a driver/car \n"
+				+ "7. Rate Usefullness of another user \n"
+				+ "8. Declare a user trusted \n"
+				+ "9. Browse Cars by matching criteria \n"
+				+ "10. Find Usefull feedback on a car/driver \n"
+				+ "11. Get Suggestions for other good cars to reserve \n"
+				+ "12. Determine similiarity with another rider \n"
+				+ "13. Find More Statistics \n"
+				+ "14. Check User Awards \n"
+				+ "15. Exit the application \n";
 		
-		System.out.print("HELLO WORLD");
+		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+		
+		while (true)
+		{
+			
+			System.out.print(instructions);
+			
+			String input = "";
+			try {
+				input = in.readLine();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+						
+			if (input == "1")
+			{
+				
+			}
+			if (input == "2")
+			{
+				
+			}
+			if (input == "3")
+			{
+				
+			}
+			if (input == "4")
+			{
+				
+			}
+			if (input == "5")
+			{
+				
+			}
+			if (input == "6")
+			{
+				
+			}
+			if (input == "7")
+			{
+				
+			}
+			if (input == "8")
+			{
+				
+			}
+			if (input == "9")
+			{
+				
+			}
+			if (input == "10")
+			{
+				
+			}
+			if (input == "11")
+			{
+				
+			}
+			if (input == "12")
+			{
+				
+			}
+			if (input == "13")
+			{
+				
+			}
+			if (input == "14")
+			{
+				
+			}
+			if (input == "15")
+			{
+				System.out.print("Goodbye \n");
+				break;
+			}
+			
+		}
 
 	}
 	
@@ -102,7 +197,7 @@ public class Main
 	 * (from all feedbacks given to UCs owned by this UD). The value of n is user-specified (say, 5, or 10).  
 	 * The ‘usefulness’of a feedback is its average ‘usefulness’ score.
 	 */
-	public String GiveFeedback()
+	public String FindFeedback()
 	{
 		return "Success";
 	}
@@ -112,16 +207,16 @@ public class Main
 	 * UC ‘B’ is suggested, if there exist a user ‘X’ that hired both ‘A’ and ‘B’. The suggested UCs should be sorted on 
 	 * decreasing total rides count (i.e., most popular first); count only rides by users like ‘X’.
 	 */
-	public String GiveSuggestion()
+	public String GetSuggestions()
 	{
 		return "Success";
 	}
 	
 	/*
-	 * UC suggestions:When a user records his/her reservations to a UC ‘A’, your system should give a list 
-	 * of other suggested UCs.  UC ‘B’ is suggested, if there exist a user ‘X’ that hired both ‘A’ and ‘B’. 
-	 * The suggested UCs should be sorted on decreasing total rides count (i.e., most popular first); 
-	 * count only rides by users like ‘X’.
+	 *Two degrees of separation’:Given two user names (logins), determine their ‘degree of separation’,
+	 *defined as follows:  Two users ‘A’ and ‘B’ are 1-degree away if they have both favorited 
+	 *at least one commonUC; they are 2-degrees away if there exists an user ‘C’ who is 1-degree 
+	 *away from each of ‘A’ and ‘B’, AND‘A’ and ‘B’ are not 1-degree away at the same time.
 	 */
 	public String DetermineSeperation()
 	{
