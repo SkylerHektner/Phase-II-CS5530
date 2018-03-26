@@ -864,6 +864,28 @@ public class Main
 	 */
 	public String UserAwards()
 	{
+		// create a new connection with the database
+		Connector connection;
+		try {
+			connection = new Connector();
+		} catch(Exception e) {
+			return e.getMessage();
+		}
+		
+		try {
+			connection.con.createStatement().executeQuery("use 5530db26");
+		}catch (SQLException e) {
+			return e.getMessage();
+		}
+		
+		// SQL call to find the most trusted users;
+		String Query = String.format("SELECT login2, count(*) as trusts\r\n" + 
+				"from Trust T\r\n" + 
+				"group by login2\r\n" + 
+				"having count(*) >= ALL (SELECT count(*) FROM Trust t\r\n" + 
+				"Group by t.trusts)\r\n" + 
+				"order by count(*)\r\n" + 
+				"LIMIT 5\r\n"
 		return "Success";
 	}
 	
