@@ -1025,6 +1025,12 @@ public class Main
 			return e.getMessage();
 		}
 		
+		try {
+			connection.closeConnection();
+		}catch (Exception e)
+		{
+			return e.getMessage();
+		}
 		return "output";
 	}
 	
