@@ -110,7 +110,13 @@ public class Main
 			}
 			else if (c == 5)
 			{
-				
+				System.out.println("Please enter your login name: ");
+				String login = in.readLine();
+				System.out.println("Please enter your password");
+				String password = in.readLine();
+				System.out.println("Please enter the Vehicle ID Number");
+				String vin = in.readLine();
+				System.out.println(RecordFavorite(login, password, vin));
 			}
 			else if (c == 6)
 			{
@@ -379,8 +385,53 @@ public class Main
 	/*
 	 * Favorite recordings: Users can declare a UC as his/her favorite car to hire.
 	 */
-	public String RecordFavorite()
+	public static String RecordFavorite(String login, String password, String vin)
 	{
+		// Verify the login information of the user
+		String loginVerification = verifyLogin(login, password, "UU");
+		if(!loginVerification.equals("Success"))
+		{
+			return loginVerification;
+		}
+		
+		// create a new connection with the database
+		Connector connection;
+		try {
+			connection = new Connector();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		
+		// select the 5530db26 from the server
+		try {
+			connection.con.createStatement().executeQuery("use 5530db26");
+		} catch (SQLException e) {
+			return e.getMessage();
+		}
+		
+		String Query = String.format("INSERT INTO Favorites VALUES (%s, '%s', cast(CURDATE() as Date))", 
+				vin, login);
+		
+		// execute the Query
+		try {
+			connection.con.createStatement().execute(Query);
+		} catch (SQLException e) {
+			// close the connection
+			try {
+				connection.closeConnection();
+			} catch (Exception j) {
+				return j.getMessage();
+			}
+			return e.getMessage();
+		}
+		
+		// close the connection
+		try {
+			connection.closeConnection();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		
 		return "Success";
 	}
 	
