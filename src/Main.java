@@ -224,7 +224,15 @@ public class Main
 			}
 			else if (c == 11)
 			{
-				
+				System.out.println("Please enter the VIN of a vehicle you have reserved: ");
+				Integer VIN = 0;
+				try {
+					VIN = Integer.parseInt(in.readLine());
+				} catch(NumberFormatException e) {
+					System.out.println("You did not enter an integer");
+					continue;
+				}
+				System.out.println(GetSuggestions(VIN));
 			}
 			else if (c == 12)
 			{
@@ -938,9 +946,74 @@ public class Main
 	 * UC ‘B’ is suggested, if there exist a user ‘X’ that hired both ‘A’ and ‘B’. The suggested UCs should be sorted on 
 	 * decreasing total rides count (i.e., most popular first); count only rides by users like ‘X’.
 	 */
-	public String GetSuggestions()
+	public static String GetSuggestions(Integer VIN)
 	{
-		return "Success";
+		// create a new connection with the database
+		Connector connection;
+		try {
+			connection = new Connector();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		
+		// select the 5530db26 from the server
+		try {
+			connection.con.createStatement().executeQuery("use 5530db26");
+		} catch (SQLException e) {
+			return e.getMessage();
+		}
+		
+		String Query = String.format("Select a.vin from "
+				+ "(select vin, login from Ride where vin = %s) a"
+				+ " Inner Join (select vin, login from Ride) b "
+				+ "on a.vin != b.vin AND a.login = b.login;", VIN);
+		
+		// Gather data from table and store
+		Map<Integer, Integer> vinCounter = new HashMap<Integer, Integer>();
+		try {
+			ResultSet results = connection.con.createStatement().executeQuery(Query);
+			while(results.next())
+			{
+				Integer vin = results.getInt(1);
+				if (vinCounter.get(vin).equals(null))
+				{
+					vinCounter.put(vin, 1);
+				}
+				else
+				{
+					vinCounter.replace(vin, vinCounter.get(vin) + 1);
+				}
+			}
+		} catch (SQLException e) {
+			return e.getMessage();
+		}
+		
+		// sort and return data
+		TreeMap<Integer,Integer> sortedData = new TreeMap<Integer,Integer>(Collections.reverseOrder());
+		for(Integer key : vinCounter.keySet())
+		{
+			sortedData.put(vinCounter.get(key), key);
+		}
+		
+		String output = "";
+		Integer n = 0;
+		for(Map.Entry<Integer, Integer> entry : sortedData.entrySet())
+		{
+			n++;
+			if (n > 10)
+			{
+				break;
+			}
+			output += "VIN " + entry.getValue().toString() 
+					+ " Has " + entry.getKey().toString() + "similiar riders\n";
+		}
+		
+		if (output.equals(""))
+		{
+			output = "There are not enough similiar riders to recommend other Vehicles";
+		}
+		
+		return output;
 	}
 	
 	/*
