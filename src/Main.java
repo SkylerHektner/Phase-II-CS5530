@@ -149,14 +149,27 @@ public class Main
 				String score = in.readLine();
 				if (0 > Integer.parseInt(score) || 2 < Integer.parseInt(score))
 				{
-					System.out.println("You did not enter a score from 0-10");
+					System.out.println("You did not enter a score from 0-2");
 					continue;
 				}
 				System.out.println(RateUsefullness(login, password, fin, score));
 			}
 			else if (c == 8)
 			{
-				
+				System.out.println("Please enter your login name: ");
+				String login = in.readLine();
+				System.out.println("Please enter your password");
+				String password = in.readLine();
+				System.out.println("Please enter the login name you're rating: ");
+				String login2 = in.readLine();
+				System.out.println("Please enter 0 to trust and 1 to not-trust: ");
+				String score = in.readLine();
+				if (0 > Integer.parseInt(score) || 1 < Integer.parseInt(score))
+				{
+					System.out.println("You did not enter a score from 0-1");
+					continue;
+				}
+				System.out.println(RecordTrust(login, password, login2, score));
 			}
 			else if (c == 9)
 			{
@@ -620,8 +633,74 @@ public class Main
 	/*
 	 * Trust recordings:A user may declare zero or more other users as ‘trusted’ or ‘not-trusted’
 	 */
-	public String RecordTrust()
+	public static String RecordTrust(String login, String password, String login2, String rating)
 	{
+		// Verify the login information of the user
+		String loginVerification = verifyLogin(login, password, "UU");
+		if(!loginVerification.equals("Success"))
+		{
+			return loginVerification;
+		}
+		
+		// create a new connection with the database
+		Connector connection;
+		try {
+			connection = new Connector();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		
+		// select the 5530db26 from the server
+		try {
+			connection.con.createStatement().executeQuery("use 5530db26");
+		} catch (SQLException e) {
+			return e.getMessage();
+		}
+		
+		// Create the query
+		String NewEntryQuery = String.format("INSERT INTO Trust VALUES ('%s', '%s', %s)",
+				login, login2, rating);
+		String ModifyEntryQuery = String.format("UPDATE Trust SET trusts = %s "
+				+ "WHERE login1 = '%s' and login2 = '%s'", rating, login, login2);
+		
+		// execute the query
+		try {
+			// first we try to create a new entry in the Trusts table
+			connection.con.createStatement().execute(NewEntryQuery);
+		} catch (SQLException e) {
+			// if we get the duplicate entry error, we try to modify the existing entry
+			if (e.getMessage().contains("Duplicate entry"))
+			{
+				try {
+					connection.con.createStatement().execute(ModifyEntryQuery);
+				} catch (SQLException e1) {
+					// close the connection
+					try {
+						connection.closeConnection();
+					} catch (Exception j) {
+						return j.getMessage();
+					}
+					return e1.getMessage();
+				}
+			}
+			else
+			{
+				// close the connection
+				try {
+					connection.closeConnection();
+				} catch (Exception j) {
+					return j.getMessage();
+				}
+				return e.getMessage();
+			}
+		}
+		// close the connection
+		try {
+			connection.closeConnection();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		
 		return "Success";
 	}
 	
