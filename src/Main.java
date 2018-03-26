@@ -197,7 +197,6 @@ public class Main
 		try {
 			connection.closeConnection();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			return e.getMessage();
 		}
 		
@@ -229,35 +228,65 @@ public class Main
 			return e.getMessage();
 		}
 		
+		// check that the login and password are valid
+		try {
+			ResultSet pasRes = connection.con.createStatement().executeQuery(String.format(
+					"select * from "
+					+ "UU where login = '%s' AND password = '%s'", login, password));
+			if (!pasRes.first()) {
+				// close the connection
+				try {
+					connection.closeConnection();
+				} catch (Exception e) {
+					return e.getMessage();
+				}
+				return "Your login information was invalid";
+			}
+		} catch (SQLException e) {
+			return e.getMessage();
+		}
+		
+		
 		for(String s : Times)
 		{
 			String time = s.substring(0, 2);
 			String Query = String.format("select vin, pid from UC inner join "
 					+ "(select login, pid from Available where pid in "
 					+ "(select pid from Period where %s < Period.to and %s > Period.from)) a on UC.login = a.login;", time, time);
-			
-			System.out.println(Query);
-			
+						
 			ResultSet results;
 			
 			// execute the query
 			try {
 				results = connection.con.createStatement().executeQuery(Query);
+				if (!results.first()) 
+				{
+					System.out.println("No valid reservations at " + s 
+							+ "\n This reservation was skipped");
+				}
+				
+				else
+				{
+					int vin = results.getInt(0);
+					int pid = results.getInt(1);
+					connection.con.createStatement().execute(String.format(""
+							+ "INSERT INTO Reserve VALUES ('%s', %d, %d, 100, '%s')", login,
+							vin, pid, s));
+				}
 			} catch (SQLException e) {
+				// close the connection
+				try {
+					connection.closeConnection();
+				} catch (Exception j) {
+					return j.getMessage();
+				}
 				return e.getMessage();
 			}
-			
 		}
-		
-		
-		
-		
-		
 		// close the connection
 		try {
 			connection.closeConnection();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			return e.getMessage();
 		}
 		
