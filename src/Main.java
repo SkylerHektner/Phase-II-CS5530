@@ -139,7 +139,20 @@ public class Main
 			}
 			else if (c == 7)
 			{
-				
+				System.out.println("Please enter your login name: ");
+				String login = in.readLine();
+				System.out.println("Please enter your password");
+				String password = in.readLine();
+				System.out.println("Please enter the Feedback ID Number");
+				String fin = in.readLine();
+				System.out.println("Please enter a score from 0-2");
+				String score = in.readLine();
+				if (0 > Integer.parseInt(score) || 2 < Integer.parseInt(score))
+				{
+					System.out.println("You did not enter a score from 0-10");
+					continue;
+				}
+				System.out.println(RateUsefullness(login, password, fin, score));
 			}
 			else if (c == 8)
 			{
@@ -211,9 +224,7 @@ public class Main
 		{
 			Query = String.format("INSERT INTO UD VALUES ('%s', 'noName', 'noAddress', 5555555, '0', '%s', 'noUDCol')", loginName, password);
 		}
-		
-		System.out.println(Query);
-				
+						
 		// execute the query
 		try {
 			connection.con.createStatement().execute(Query);
@@ -284,8 +295,8 @@ public class Main
 				
 				else
 				{
-					int vin = results.getInt(0);
-					int pid = results.getInt(1);
+					int vin = results.getInt(1);
+					int pid = results.getInt(2);
 					connection.con.createStatement().execute(String.format(""
 							+ "INSERT INTO Reserve VALUES ('%s', %d, %d, 100, '%s')", login,
 							vin, pid, s));
@@ -511,8 +522,98 @@ public class Main
 	 * (’useless’,’useful’, ’very useful’ respectively).  A user should not be allowed to provide a 
 	 * usefulness-rating for his/her own feedbacks.
 	 */
-	public String RateUsefullness()
+	public static String RateUsefullness(String login, String password, String fid, String rating)
 	{
+		// Verify the login information of the user
+		String loginVerification = verifyLogin(login, password, "UU");
+		if(!loginVerification.equals("Success"))
+		{
+			return loginVerification;
+		}
+		
+		// create a new connection with the database
+		Connector connection;
+		try {
+			connection = new Connector();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		
+		// select the 5530db26 from the server
+		try {
+			connection.con.createStatement().executeQuery("use 5530db26");
+		} catch (SQLException e) {
+			return e.getMessage();
+		}
+		
+		// TEST if the user is trying to rate their own feedback
+		String testQuery = String.format("Select login from Feedback where fid = %s", fid);
+		// Check if the feedback ID is valid or they are rating themselves
+		try {
+			ResultSet results = connection.con.createStatement().executeQuery(testQuery);
+			if (results.first() && !results.getString(1).equals(login))
+			{
+				// do nothing and proceed with the method
+			}
+			else
+			{
+				// close the connection
+				try {
+					connection.closeConnection();
+				} catch (Exception j) {
+					return j.getMessage();
+				}
+				return "Either feedback ID doesn't exist or you are rating yourself";
+			}
+		} catch (SQLException e) {
+			// close the connection
+			try {
+				connection.closeConnection();
+			} catch (Exception j) {
+				return j.getMessage();
+			}
+			return e.getMessage();
+		}
+
+		//quickly format rating into it's corresponding value
+		if (rating.equals("0"))
+		{
+			rating = "useless";
+		}
+		else if (rating.equals("1"))
+		{
+			rating = "useful";
+		}
+		else if (rating.equals("2"))
+		{
+			rating = "very useful";
+		}
+		
+		// construct insert query for rating table
+		String Query = String.format("INSERT INTO Rates VALUES ('%s', %s, '%s')",
+				login, fid, rating);
+		
+		// Insert new rating into Rates table
+		try {
+			connection.con.createStatement().execute(Query);
+		} catch (SQLException e) {
+			// close the connection
+			try {
+				connection.closeConnection();
+			} catch (Exception j) {
+				return j.getMessage();
+			}
+			return e.getMessage();
+		}
+		
+		// close the connection
+		try {
+			connection.closeConnection();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		
+		
 		return "Success";
 	}
 	
