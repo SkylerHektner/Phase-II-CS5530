@@ -988,6 +988,13 @@ public class Main
 			return e.getMessage();
 		}
 		
+		// close the connection
+		try {
+			connection.closeConnection();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		
 		// sort and return data
 		TreeMap<Integer,Integer> sortedData = new TreeMap<Integer,Integer>(Collections.reverseOrder());
 		for(Integer key : vinCounter.keySet())
