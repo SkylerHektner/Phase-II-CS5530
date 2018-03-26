@@ -244,7 +244,7 @@ public class Main
 			}
 			else if (c == 14)
 			{
-				
+				System.out.println(UserAwards() + "\n");
 			}
 			else if (c == 15)
 			{
@@ -1047,9 +1047,58 @@ public class Main
 	 * •the top most ‘useful’ users (the usefulness score of a user is the average ‘usefulness’ of all 
 	 * 	of his/her feedbacks combined)
 	 */
-	public String UserAwards()
+	public static String UserAwards()
 	{
-		return "Success";
+		// create a new connection with the database
+		Connector connection;
+		try {
+			connection = new Connector();
+		} catch(Exception e) {
+			return e.getMessage();
+		}
+		
+		try {
+			connection.con.createStatement().executeQuery("use 5530db26");
+		}catch (SQLException e) {
+			return e.getMessage();
+		}
+		
+		// SQL call to find the most trusted users;
+		String Query = String.format("SELECT login2, count(*) as trusts\r\n" + 
+				"from Trust T\r\n" + 
+				"group by login2\r\n" + 
+				"having count(*) >= ALL (SELECT count(*) FROM Trust t\r\n" + 
+				"Group by t.trusts)\r\n" + 
+				"order by count(*)\r\n" + 
+				"LIMIT 5\r\n");
+		String output = "top trusted: \r\n";
+		try {
+			ResultSet results = connection.con.createStatement().executeQuery(Query);
+			while (results.next())
+			{
+				output = output + results.getString(1)+ "\r\n";
+			}
+		} catch (SQLException e) {
+			return e.getMessage();
+		}
+		
+		Query = String.format("select F.login\r\n" + 
+				"from Feedback F, Rates R\r\n" + 
+				"WHERE F.fid = R.fid\r\n" + 
+				"group by F.login\r\n" + 
+				"LIMIT 5");
+		output += "top ratings: \r\n";
+		
+		try {
+			ResultSet results = connection.con.createStatement().executeQuery(Query);
+			while(results.next()) {
+				output = output + results.getString(1) + "\r\n";
+			}
+		} catch(SQLException e) {
+			return e.getMessage();
+		}
+		
+		return "output";
 	}
 	
 	public static String verifyLogin(String login, String password, String userType)
