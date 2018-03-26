@@ -240,7 +240,7 @@ public class Main
 			}
 			else if (c == 13)
 			{
-				
+				System.out.println(Statistics() + "\n");
 			}
 			else if (c == 14)
 			{
@@ -1041,8 +1041,91 @@ public class Main
 	 * •the list of highly rated UDs (defined by the average scores from all feedbacks 
 	 *  a UD has received for all of his/her UCs) for each category
 	 */
-	public String Statistics()
+	public static String Statistics()
 	{
+		Connector connection;
+		
+		try	{
+			connection = new Connector();
+		} catch (Exception e)
+		{
+			return e.getMessage();
+		}
+		
+		try {
+			connection.con.createStatement().executeQuery("use 5530db26");
+		}catch (SQLException e) {
+			return e.getMessage();
+		}
+		
+		String Query = String.format("select c.vin, c.category, count(*) as vin\r\n" + 
+				"from UC c, Ride r\r\n" + 
+				"group by c.vin, c.category\r\n" + 
+				"having count(*) >= ALL(Select count(*) FROM r group by r.vin)\r\n" + 
+				"order by count(*)\r\n" + 
+				"Limit 5");
+		
+		String output = "Most popular cars: \r\n";
+		
+		try {
+			ResultSet Result = connection.con.createStatement().executeQuery(Query);
+			while (Result.next())
+			{
+				output = output + Result.getString(1) + "\r\n"; 
+			}
+		}catch(SQLException e)
+		{
+			return e.getMessage();
+		}
+		
+		output = output + "Most expensive Cars: \r\n";
+		Query = String.format("select vin, avg(cost)\r\n" + 
+				"from Ride\r\n" + 
+				"group by vin\r\n" + 
+				"having avg(cost) >= ALL(Select AVG(cost) FROM Ride group by vin)\r\n" + 
+				"order by AVG(cost)\r\n" + 
+				"Limit 5");
+		try {
+			ResultSet Result = connection.con.createStatement().executeQuery(Query);
+			while (Result.next())
+			{
+				output = output + Result.getString(1) + "\r\n"; 
+			}
+		}catch(SQLException e)
+		{
+			return e.getMessage();
+		}
+		
+		output = output + "Highest rated Drivers: \r\n";
+		Query = String.format("select d.login, avg(f.score)\r\n" + 
+				"from UD d, Feedback f\r\n" + 
+				"Group by d.login\r\n" + 
+				"having avg(f.score) >= ALL\r\n" + 
+				"(\r\n" + 
+				"	Select AVG(score)\r\n" + 
+				"	FROM Feedback f1, UC c\r\n" + 
+				"	WHERE f1.vin = c.vin AND c.login = d.login\r\n" + 
+				"	group by f1.vin)\r\n" + 
+				"order by AVG(f.score)\r\n" + 
+				"Limit 5");
+		
+		try {
+			ResultSet Result = connection.con.createStatement().executeQuery(Query);
+			while (Result.next())
+			{
+				output = output + Result.getString(1) + "\r\n"; 
+			}
+		}catch(SQLException e)
+		{
+			return e.getMessage();
+		}
+
+		try {
+			connection.closeConnection();
+		}catch (Exception e)
+		{
+			return e.getMessage();
+		}
 		return "Success";
 	}
 	
