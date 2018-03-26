@@ -106,7 +106,35 @@ public class Main
 			}
 			else if (c == 4)
 			{
-				
+				System.out.println("Please enter your login name: ");
+				String login = in.readLine();
+				System.out.println("Please enter your password: ");
+				String password = in.readLine();
+				System.out.println("Please enter the number of Rides you would like to enter: ")
+				Integer num = Integer.parseInt(in.readLine());
+				for(int i = 0; i < num; i++)
+				{
+					System.out.println("Please enter the Vehicle ID Number: ");
+					String vin = in.readLine();
+					System.out.println("Please enter the start hour");
+					String h1 = in.readLine();
+					System.out.println("Please enter the end hour");
+					String h2 = in.readLine();
+					System.out.println("Please enter the cost of the ride");
+					String cost = in.readLine();
+					System.out.println("Is the following Ride correct?");
+					System.out.println(login + "rode in car with vin:" + vin + "from" h1 + "-" + h2 + "for $" + cost);
+					System.out.println("enter '0' for no and '1' for yest");
+					String answer = in.readLine();
+					if(answer == 0)
+					{
+						System.out.println("please re-enter values");
+						i--;
+					}
+					else
+					{
+						System.out.println(Rides(login, password, vin, h1, h2, cost));
+					}
 			}
 			else if (c == 5)
 			{
@@ -392,8 +420,76 @@ public class Main
 	 * him/her for the final review and confirmation,before they are added into the database.  
 	 * Note that a user may only record a ride at a UC during a period that the associated UD is available.
 	 */
-	public String Rides() 
+	public String Rides(String login, String Password, String vin, String hour1, String hour2, String cost) 
 	{
+		
+		// Verify the login information of the user
+		String loginVerification = verifyLogin(login, password, "UU");
+		if(!loginVerification.equals("Success"))
+		{
+			return loginVerification;
+		}
+		
+		// create a new connection with the database
+		Connector connection;
+		try {
+			connection = new Connector();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		
+		// select the 5530db26 from the server
+		try {
+			connection.con.createStatement().executeQuery("use 5530db26");
+		} catch (SQLException e) {
+			return e.getMessage();
+		}
+
+		// THE SQL to learn if the car is actually in service during the selected times
+		String Query = String.format("SELECT UC.login FROM UC, Period, Available WHERE Period.from < %s AND Period.to > %s " +
+		"AND Period.pid = Available.pid AND Available.login = UC.login AND UC.vin = %s", hour1, hour2, vin);
+		
+		Boolean bool;
+		try {
+			bool = connection.con.createStatement().execute(Query);
+		} catch (SQLException e) {
+			// close the connection
+			try {
+				connection.closeConnection();
+			} catch (Exception j) {
+				return j.getMessage();
+			}
+			return e.getMessage();
+		}
+		
+		if (bool)
+		{
+			// add the ride data to datbase
+			Query = String.format("INSERT INTO Ride VALUES (%s, cast(CURDATE() as Date), %d, %d, %s, %d)",
+					cost, hour1, hour2, login, vin);
+			// execute the Query
+			try {
+				connection.con.createStatement().execute(Query);
+			} catch (SQLException e) {
+				// close the connection
+				try {
+					connection.closeConnection();
+				} catch (Exception j) {
+					return j.getMessage();
+				}
+				return e.getMessage();
+			}
+		}
+		else
+		{
+			return "This Driver does not work during the selected hours";
+		}
+		
+		try {
+			connection.closeConnection()
+		}catch (Exception j) {
+			return j.getMessage();
+		}
 		return "Success";
 	}
 	
