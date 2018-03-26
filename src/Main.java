@@ -20,11 +20,11 @@ public class Main
 				+ "3. Create a new car \n"
 				+ "4. Record a ride \n"
 				+ "5. Record a favorite driver/car \n"
-				+ "6. Record Feedback for a driver/car \n"
+				+ "6. Record Feedback for a car \n"
 				+ "7. Rate Usefullness of another user \n"
 				+ "8. Declare a user trusted \n"
 				+ "9. Browse Cars by matching criteria \n"
-				+ "10. Find Usefull feedback on a car/driver \n"
+				+ "10. Find Usefull feedback on a car \n"
 				+ "11. Get Suggestions for other good cars to reserve \n"
 				+ "12. Determine similiarity with another rider \n"
 				+ "13. Find More Statistics \n"
@@ -206,7 +206,7 @@ public class Main
 			}
 			else if (c == 9)
 			{
-				
+				System.out.println(BrowseUC());;
 			}
 			else if (c == 10)
 			{
@@ -236,7 +236,7 @@ public class Main
 			}
 			else if (c == 12)
 			{
-				
+				System.out.println(DetermineSeperation());
 			}
 			else if (c == 13)
 			{
@@ -829,9 +829,9 @@ public class Main
 	 * Your system should allow the user to specify that the results are to be sorted (a) by the 
 	 * average numerical score of the feedbacks,or (b) by the average numerical score of the trusted user feedbacks.
 	 */
-	public String BrowseUC()
+	public static String BrowseUC()
 	{
-		return "Success";
+		return "Not Implemented";
 	}
 	
 	/*
@@ -1029,9 +1029,9 @@ public class Main
 	 *at least one commonUC; they are 2-degrees away if there exists an user ‘C’ who is 1-degree 
 	 *away from each of ‘A’ and ‘B’, AND‘A’ and ‘B’ are not 1-degree away at the same time.
 	 */
-	public String DetermineSeperation()
+	public static String DetermineSeperation()
 	{
-		return "Success";
+		return "Not Implemented";
 	}
 	
 	/*
