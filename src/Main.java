@@ -120,7 +120,22 @@ public class Main
 			}
 			else if (c == 6)
 			{
-				
+				System.out.println("Please enter your login name: ");
+				String login = in.readLine();
+				System.out.println("Please enter your password");
+				String password = in.readLine();
+				System.out.println("Please enter the Vehicle ID Number");
+				String vin = in.readLine();
+				System.out.println("Please enter a score from 0-10");
+				String score = in.readLine();
+				if (0 > Integer.parseInt(score) || 10 < Integer.parseInt(score))
+				{
+					System.out.println("You did not enter a score from 0-10");
+					continue;
+				}
+				System.out.println("Please enter any feedback (optional, press enter to skip)");
+				String text = in.readLine();
+				System.out.println(RecordFeedback(login, password, vin, score, text));
 			}
 			else if (c == 7)
 			{
@@ -440,8 +455,54 @@ public class Main
 	 * the numerical score (0= terrible, 10= excellent), and an optional short text.  No changes are allowed; 
 	 * only one feedback per user per UC is allowed.
 	 */
-	public String RecordFeedback()
+	public static String RecordFeedback(String login, String password, String vin, String score, String text)
 	{
+		// Verify the login information of the user
+		String loginVerification = verifyLogin(login, password, "UU");
+		if(!loginVerification.equals("Success"))
+		{
+			return loginVerification;
+		}
+		
+		// create a new connection with the database
+		Connector connection;
+		try {
+			connection = new Connector();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		
+		// select the 5530db26 from the server
+		try {
+			connection.con.createStatement().executeQuery("use 5530db26");
+		} catch (SQLException e) {
+			return e.getMessage();
+		}
+		
+		String Query = String.format("INSERT INTO Feedback (text, fbdate, vin, login, score) "
+				+ "VALUES ('%s', cast(CURDATE() as Date), %s, '%s', %s)",
+				text, vin, login, score);
+		
+		// execute the Query
+		try {
+			connection.con.createStatement().execute(Query);
+		} catch (SQLException e) {
+			// close the connection
+			try {
+				connection.closeConnection();
+			} catch (Exception j) {
+				return j.getMessage();
+			}
+			return e.getMessage();
+		}
+		
+		// close the connection
+		try {
+			connection.closeConnection();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		
 		return "Success";
 	}
 	
