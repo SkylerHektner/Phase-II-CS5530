@@ -3,7 +3,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class Main 
 {
@@ -110,7 +114,7 @@ public class Main
 				String login = in.readLine();
 				System.out.println("Please enter your password: ");
 				String password = in.readLine();
-				System.out.println("Please enter the number of Rides you would like to enter: ")
+				System.out.println("Please enter the number of Rides you would like to enter: ");
 				Integer num = Integer.parseInt(in.readLine());
 				for(int i = 0; i < num; i++)
 				{
@@ -123,10 +127,10 @@ public class Main
 					System.out.println("Please enter the cost of the ride");
 					String cost = in.readLine();
 					System.out.println("Is the following Ride correct?");
-					System.out.println(login + "rode in car with vin:" + vin + "from" h1 + "-" + h2 + "for $" + cost);
-					System.out.println("enter '0' for no and '1' for yest");
+					System.out.println(login + "rode in car with vin:" + vin + "from" + h1 + "-" + h2 + "for $" + cost);
+					System.out.println("enter '0' for no and '1' for yes");
 					String answer = in.readLine();
-					if(answer == 0)
+					if(Integer.parseInt(answer) == 0)
 					{
 						System.out.println("please re-enter values");
 						i--;
@@ -135,6 +139,7 @@ public class Main
 					{
 						System.out.println(Rides(login, password, vin, h1, h2, cost));
 					}
+				}
 			}
 			else if (c == 5)
 			{
@@ -205,7 +210,17 @@ public class Main
 			}
 			else if (c == 10)
 			{
-				
+				System.out.println("Please enter the Driver Login you want reviews on: ");
+				String DriverLogin = in.readLine();
+				System.out.println("Please enter the max number of reviews your want");
+				Integer N = 0;
+				try {
+					N = Integer.parseInt(in.readLine());
+				} catch(NumberFormatException e) {
+					System.out.println("You did not enter an integer");
+					continue;
+				}
+				System.out.println(UsefulFeedbacks(DriverLogin, N));
 			}
 			else if (c == 11)
 			{
@@ -444,11 +459,11 @@ public class Main
 	 * him/her for the final review and confirmation,before they are added into the database.  
 	 * Note that a user may only record a ride at a UC during a period that the associated UD is available.
 	 */
-	public String Rides(String login, String Password, String vin, String hour1, String hour2, String cost) 
+	public static String Rides(String login, String Password, String vin, String hour1, String hour2, String cost) 
 	{
 		
 		// Verify the login information of the user
-		String loginVerification = verifyLogin(login, password, "UU");
+		String loginVerification = verifyLogin(login, Password, "UU");
 		if(!loginVerification.equals("Success"))
 		{
 			return loginVerification;
@@ -488,7 +503,7 @@ public class Main
 		
 		if (bool)
 		{
-			// add the ride data to datbase
+			// add the ride data to database
 			Query = String.format("INSERT INTO Ride VALUES (%s, cast(CURDATE() as Date), %d, %d, %s, %d)",
 					cost, hour1, hour2, login, vin);
 			// execute the Query
@@ -510,7 +525,7 @@ public class Main
 		}
 		
 		try {
-			connection.closeConnection()
+			connection.closeConnection();
 		}catch (Exception j) {
 			return j.getMessage();
 		}
@@ -816,9 +831,106 @@ public class Main
 	 * (from all feedbacks given to UCs owned by this UD). The value of n is user-specified (say, 5, or 10).  
 	 * The ‘usefulness’of a feedback is its average ‘usefulness’ score.
 	 */
-	public String FindFeedback()
+	public static String UsefulFeedbacks(String UD, Integer N)
 	{
-		return "Success";
+		// create a new connection with the database
+		Connector connection;
+		try {
+			connection = new Connector();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		
+		// select the 5530db26 from the server
+		try {
+			connection.con.createStatement().executeQuery("use 5530db26");
+		} catch (SQLException e) {
+			return e.getMessage();
+		}
+		
+		// Get all feedback IDs for every review on a car owned by UD
+		String QueryForFIDS = String.format("select fid from Feedback where vin in "
+				+ "(select vin from UC where login = '%s')", UD);
+		Map<Integer, Float> fids = new HashMap<Integer, Float>();
+		try {
+			ResultSet results = connection.con.createStatement().executeQuery(QueryForFIDS);
+			while(results.next())
+			{
+				fids.put(results.getInt(1), 0f);
+			}
+		} catch (SQLException e) {
+			return e.getMessage();
+		}
+		
+		// iterate over ID's and record their average usefuleness
+		for(Integer fid : fids.keySet())
+		{
+			String QueryForUse = String.format("select rating from Rates where fid = %s",
+					fid);
+			try {
+				ResultSet results = connection.con.createStatement().executeQuery(QueryForUse);
+				int count = 0;
+				while(results.next())
+				{
+					String rating = results.getString(1);
+					if (rating.equals("useless"))
+					{
+						fids.replace(fid, fids.get(fid) + 0);
+					}
+					else if (rating.equals("useful"))
+					{
+						fids.replace(fid, fids.get(fid) + 1);
+					}
+					else if (rating.equals("very useful"))
+					{
+						fids.replace(fid, fids.get(fid) + 2);
+					}
+					count++;
+				}
+				if(count > 0)
+				{
+					fids.replace(fid, fids.get(fid) / count);
+				}
+			} catch (SQLException e) {
+				return e.getMessage();
+			}
+		}
+		
+		// close the connection
+		try {
+			connection.closeConnection();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		
+		// sort all values
+		TreeMap<Float, Integer> sortedValues = new TreeMap<Float, Integer>(Collections.reverseOrder());
+		for(Integer key : fids.keySet())
+		{
+			sortedValues.put(fids.get(key), key);
+		}
+		
+		// compile into an output
+		String output = "";
+		
+		Integer n = 0;
+		for(Map.Entry<Float, Integer> entry : sortedValues.entrySet())
+		{
+			n++;
+			if (n > N)
+			{
+				break;
+			}
+			output += "FID " + entry.getValue().toString() 
+					+ " Has an average score of " + entry.getKey().toString() + "\n";
+		}
+		
+		if (output.equals(""))
+		{
+			output = "There are no reviews on that driver";
+		}
+		
+		return output;		
 	}
 	
 	/*
