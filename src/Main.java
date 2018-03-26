@@ -94,7 +94,15 @@ public class Main
 			}
 			else if (c == 3)
 			{
-				
+				System.out.println("Please enter your login name: ");
+				String login = in.readLine();
+				System.out.println("Please enter your password");
+				String password = in.readLine();
+				System.out.println("Please enter your Vehicle ID Number");
+				String vin = in.readLine();
+				System.out.println("Please enter your Vehicle Category");
+				String category = in.readLine();
+				System.out.println(NewUC(login, password, vin, category));
 			}
 			else if (c == 4)
 			{
@@ -213,6 +221,13 @@ public class Main
 	 */
 	public static String Reserve(String login, String password, List<String> Times)
 	{
+		// check that the login and password are valid
+		String loginVerification = verifyLogin(login, password, "UU");
+		if(!loginVerification.equals("Success"))
+		{
+			return loginVerification;
+		}
+		
 		// create a new connection with the database
 		Connector connection;
 		try {
@@ -227,25 +242,6 @@ public class Main
 		} catch (SQLException e) {
 			return e.getMessage();
 		}
-		
-		// check that the login and password are valid
-		try {
-			ResultSet pasRes = connection.con.createStatement().executeQuery(String.format(
-					"select * from "
-					+ "UU where login = '%s' AND password = '%s'", login, password));
-			if (!pasRes.first()) {
-				// close the connection
-				try {
-					connection.closeConnection();
-				} catch (Exception e) {
-					return e.getMessage();
-				}
-				return "Your login information was invalid";
-			}
-		} catch (SQLException e) {
-			return e.getMessage();
-		}
-		
 		
 		for(String s : Times)
 		{
@@ -297,8 +293,74 @@ public class Main
 	/*
 	 * A user may record the details of a new UC, and may update the information regarding an existing UC he/she owns.
 	 */
-	public String NewUC()
+	public static String NewUC(String login, String password, String vin, String category)
 	{
+		String loginVerification = verifyLogin(login, password, "UD");
+		if(!loginVerification.equals("Success"))
+		{
+			return loginVerification;
+		}
+		
+		// create a new connection with the database
+		Connector connection;
+		try {
+			connection = new Connector();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		
+		// select the 5530db26 from the server
+		try {
+			connection.con.createStatement().executeQuery("use 5530db26");
+		} catch (SQLException e) {
+			return e.getMessage();
+		}
+		
+		// Create the query
+		String NewEntryQuery = String.format("INSERT INTO UC VALUES (%s, '%s', '%s')",
+				vin, category, login);
+		String ModifyEntryQuery = String.format("UPDATE UC SET category = '%s'"
+				+ "WHERE vin = %s", category, vin);
+		
+		// execute the query
+		try {
+			// first we try to create a new entry in the UC table
+			connection.con.createStatement().execute(NewEntryQuery);
+		} catch (SQLException e) {
+			// if we get the duplicate entry error, we try to modify the existing entry
+			if (e.getMessage().contains("Duplicate entry"))
+			{
+				try {
+					connection.con.createStatement().execute(ModifyEntryQuery);
+				} catch (SQLException e1) {
+					// close the connection
+					try {
+						connection.closeConnection();
+					} catch (Exception j) {
+						return j.getMessage();
+					}
+					return e1.getMessage();
+				}
+			}
+			else
+			{
+				// close the connection
+				try {
+					connection.closeConnection();
+				} catch (Exception j) {
+					return j.getMessage();
+				}
+				return e.getMessage();
+			}
+		}
+		// close the connection
+		try {
+			connection.closeConnection();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		
+		
 		return "Success";
 	}
 	
@@ -414,6 +476,52 @@ public class Main
 	 */
 	public String UserAwards()
 	{
+		return "Success";
+	}
+	
+	public static String verifyLogin(String login, String password, String userType)
+	{
+		// create a new connection with the database
+		Connector connection;
+		try {
+			connection = new Connector();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		
+		// select the 5530db26 from the server
+		try {
+			connection.con.createStatement().executeQuery("use 5530db26");
+		} catch (SQLException e) {
+			return e.getMessage();
+		}
+		
+		// check that the login and password are valid
+		try {
+			ResultSet pasRes = connection.con.createStatement().executeQuery(String.format(
+					"select * from "
+					+ "%s where login = '%s' AND password = '%s'", userType, login, password));
+			if (!pasRes.first()) {
+				// close the connection
+				try {
+					connection.closeConnection();
+				} catch (Exception e) {
+					return e.getMessage();
+				}
+				return "Your login information was invalid";
+			}
+		} catch (SQLException e) {
+			return e.getMessage();
+		}
+		
+		// close the connection
+		try {
+			connection.closeConnection();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		
+		
 		return "Success";
 	}
 }
